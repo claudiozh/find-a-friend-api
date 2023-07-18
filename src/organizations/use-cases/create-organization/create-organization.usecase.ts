@@ -1,5 +1,6 @@
-import { validate } from 'class-validator';
+import { ConflictException } from '@nestjs/common';
 
+import { validateDTO } from '@/core/utils/validate-dto';
 import { CreateOrganizationDTO } from '@/organizations/dtos/create-organization.dto';
 import { Organization } from '@/organizations/entities/organization';
 import { mapCreateOrganizationDtoToEntity } from '@/organizations/mappers/organization.mapper';
@@ -16,23 +17,14 @@ interface ICreateOrganizationUseCaseOutput {
 export class CreateOrganizationUseCase {
   constructor(private readonly organizationsRepository: OrganizationsRepository) {}
 
-  async validateInput(createOrganizationDTO: CreateOrganizationDTO): Promise<void> {
-    const dto = new CreateOrganizationDTO();
-
-    for (const key in createOrganizationDTO) {
-      dto[key] = createOrganizationDTO[key];
-    }
-
-    const errors = await validate(dto);
-
-    if (errors.length > 0) {
-      console.log(errors[0]);
-      throw new Error(errors[0].value);
-    }
-  }
-
   async execute({ createOrganizationDTO }: ICreateOrganizationUseCaseInput): Promise<ICreateOrganizationUseCaseOutput> {
-    await this.validateInput(createOrganizationDTO);
+    await validateDTO({ dtoClass: CreateOrganizationDTO, dtoObject: createOrganizationDTO });
+
+    const organizationWithSameEmail = await this.organizationsRepository.findOneByEmail(createOrganizationDTO.email);
+
+    if (organizationWithSameEmail) {
+      throw new ConflictException('Ops! Já existe organização com esse email');
+    }
 
     const organizationEntity = await mapCreateOrganizationDtoToEntity(createOrganizationDTO);
     const createdOrganization = await this.organizationsRepository.create(organizationEntity);
