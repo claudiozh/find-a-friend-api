@@ -1,11 +1,28 @@
 import { BadRequestException, ConflictException } from '@nestjs/common';
 
 import { BrazilStatesEnum } from '@/core/enums/brazil-states.enum';
+import { CreateOrganizationDTO } from '@/organizations/dtos/create-organization.dto';
 import { InMemoryOrganizationsRepository } from '@/organizations/repositories/in-memory/in-memory-organizations.repository';
 import { CreateOrganizationUseCase } from '@/organizations/use-cases/create-organization/create-organization.usecase';
 
 let sut: CreateOrganizationUseCase;
 let organizationsRepository: InMemoryOrganizationsRepository;
+
+const mockCreateOrganizationDTO: CreateOrganizationDTO = {
+  responsibleName: 'John Doe',
+  whatsapp: '84999917380',
+  email: 'johndoe@gmail.com',
+  password: '123456789',
+  address: {
+    city: 'Portalegre',
+    neighborhood: 'Zona Rural',
+    number: 'SN',
+    state: BrazilStatesEnum.RN,
+    street: 'Sitio Belo Monte',
+    zipCode: '59920-000',
+    complement: 'Casa',
+  },
+};
 
 describe('Create Organization Use Case', () => {
   beforeEach(async () => {
@@ -13,23 +30,9 @@ describe('Create Organization Use Case', () => {
     sut = new CreateOrganizationUseCase(organizationsRepository);
   });
 
-  it('should be able to create create a new organization', async () => {
+  it('should be able to create a new organization', async () => {
     const result = await sut.execute({
-      createOrganizationDTO: {
-        responsibleName: 'John Doe',
-        whatsapp: '84999917380',
-        email: 'johndoe@gmail.com',
-        password: '123456789',
-        address: {
-          city: 'Portalegre',
-          neighborhood: 'Zona Rural',
-          number: 'SN',
-          state: BrazilStatesEnum.RN,
-          street: 'Sitio Belo Monte',
-          zipCode: '59810000',
-          complement: 'Casa',
-        },
-      },
+      createOrganization: mockCreateOrganizationDTO,
     });
 
     expect(result.organization.id).toEqual(expect.any(String));
@@ -38,40 +41,12 @@ describe('Create Organization Use Case', () => {
 
   it('should not be able to create new organization with existing email', async () => {
     await sut.execute({
-      createOrganizationDTO: {
-        responsibleName: 'John Doe',
-        whatsapp: '84999917380',
-        email: 'johndoe@gmail.com',
-        password: '123456789',
-        address: {
-          city: 'Portalegre',
-          neighborhood: 'Zona Rural',
-          number: 'SN',
-          state: BrazilStatesEnum.RN,
-          street: 'Sitio Belo Monte',
-          zipCode: '59810000',
-          complement: 'Casa',
-        },
-      },
+      createOrganization: mockCreateOrganizationDTO,
     });
 
     await expect(async () =>
       sut.execute({
-        createOrganizationDTO: {
-          responsibleName: 'John Doe',
-          whatsapp: '84999917380',
-          email: 'johndoe@gmail.com',
-          password: '123456789',
-          address: {
-            city: 'Portalegre',
-            neighborhood: 'Zona Rural',
-            number: 'SN',
-            state: BrazilStatesEnum.RN,
-            street: 'Sitio Belo Monte',
-            zipCode: '59810000',
-            complement: 'Casa',
-          },
-        },
+        createOrganization: mockCreateOrganizationDTO,
       }),
     ).rejects.toBeInstanceOf(ConflictException);
   });
@@ -79,7 +54,7 @@ describe('Create Organization Use Case', () => {
   it('should not be able to create an organization because the dto is invalid', async () => {
     await expect(async () =>
       sut.execute({
-        createOrganizationDTO: {
+        createOrganization: {
           responsibleName: 'any_name',
           whatsapp: 'any_whatsapp',
           email: 'any_email',

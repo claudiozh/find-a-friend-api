@@ -10,6 +10,8 @@ export const mapCreateOrganizationDtoToEntity = async (dto: CreateOrganizationDT
     updatedAt: new Date(),
     responsibleName: dto.responsibleName,
     email: dto.email,
+    passwordHash: dto.password,
+    whatsapp: dto.whatsapp,
     addressCity: dto.address.city,
     addressState: dto.address.state,
     addressNeighborhood: dto.address.neighborhood,
@@ -17,7 +19,5 @@ export const mapCreateOrganizationDtoToEntity = async (dto: CreateOrganizationDT
     addressNumber: dto.address.number,
     addressComplement: dto.address.complement,
     addressZipCode: dto.address.zipCode,
-    password: dto.password,
-    whatsapp: dto.whatsapp,
   };
 };

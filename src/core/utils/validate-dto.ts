@@ -1,24 +1,38 @@
 import { BadRequestException } from '@nestjs/common';
+import { plainToInstance } from 'class-transformer';
 import { ValidationError, validate } from 'class-validator';
 
 type DTOType<T> = { new (): T };
 
-export async function validateDTO<T>(params: {
-  dtoClass: DTOType<T>;
-  dtoObject: T;
-}): Promise<BadRequestException | void> {
-  const { dtoClass: DTOClass, dtoObject } = params;
-  const dto = new DTOClass();
+const getMessageError = (errors: ValidationError[]): string => {
+  const [firstError] = errors;
+  const hasNestedErrors = firstError?.children?.length > 0;
 
-  for (const key in dtoObject) {
-    dto[key] = dtoObject[key];
+  if (hasNestedErrors) {
+    const [nestedError] = firstError.children;
+    const [nestedMessageError] = Object.values(nestedError.constraints);
+
+    return nestedMessageError;
   }
 
-  const errors: ValidationError[] = await validate(dto as object);
+  const [messageError] = Object.values(firstError.constraints);
 
-  if (errors.length > 0) {
-    const [firstMessageError] = errors.map((error) => Object.values(error.constraints)).flat();
+  return messageError;
+};
 
-    throw new BadRequestException(firstMessageError);
+export const validateDTO = async <T>(DTOClass: DTOType<T>, dtoObject: T): Promise<BadRequestException | void> => {
+  const dto = plainToInstance(DTOClass, dtoObject);
+
+  const errors = await validate(dto as object, {
+    stopAtFirstError: true,
+    whitelist: true,
+    forbidNonWhitelisted: true,
+  });
+
+  const hasErrors = errors.length > 0;
+
+  if (hasErrors) {
+    const messageError = getMessageError(errors);
+    throw new BadRequestException(messageError);
   }
-}
+};

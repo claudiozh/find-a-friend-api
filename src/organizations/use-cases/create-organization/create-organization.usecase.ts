@@ -7,7 +7,7 @@ import { mapCreateOrganizationDtoToEntity } from '@/organizations/mappers/organi
 import { OrganizationsRepository } from '@/organizations/repositories/organizations.repository';
 
 interface ICreateOrganizationUseCaseInput {
-  createOrganizationDTO: CreateOrganizationDTO;
+  createOrganization: CreateOrganizationDTO;
 }
 
 interface ICreateOrganizationUseCaseOutput {
@@ -17,16 +17,16 @@ interface ICreateOrganizationUseCaseOutput {
 export class CreateOrganizationUseCase {
   constructor(private readonly organizationsRepository: OrganizationsRepository) {}
 
-  async execute({ createOrganizationDTO }: ICreateOrganizationUseCaseInput): Promise<ICreateOrganizationUseCaseOutput> {
-    await validateDTO({ dtoClass: CreateOrganizationDTO, dtoObject: createOrganizationDTO });
+  async execute({ createOrganization }: ICreateOrganizationUseCaseInput): Promise<ICreateOrganizationUseCaseOutput> {
+    await validateDTO(CreateOrganizationDTO, createOrganization);
 
-    const organizationWithSameEmail = await this.organizationsRepository.findOneByEmail(createOrganizationDTO.email);
+    const organizationWithSameEmail = await this.organizationsRepository.findOneByEmail(createOrganization.email);
 
     if (organizationWithSameEmail) {
       throw new ConflictException('Ops! Já existe organização com esse email');
     }
 
-    const organizationEntity = await mapCreateOrganizationDtoToEntity(createOrganizationDTO);
+    const organizationEntity = await mapCreateOrganizationDtoToEntity(createOrganization);
     const createdOrganization = await this.organizationsRepository.create(organizationEntity);
 
     return {

@@ -6,6 +6,8 @@ export class Organization {
   responsibleName: string;
   email: string;
   whatsapp: string;
+  passwordHash: string;
+
   addressCity: string;
   addressState: string;
   addressNeighborhood: string;
@@ -13,5 +15,4 @@ export class Organization {
   addressNumber: string;
   addressComplement: string;
   addressZipCode: string;
-  password: string;
 }
